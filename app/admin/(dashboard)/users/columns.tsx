@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/types";
 import { format } from "date-fns";
+import Link from "next/link";
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -146,11 +147,8 @@ export const columns: ColumnDef<User>[] = [
               Copy user ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View user</DropdownMenuItem>
-            <DropdownMenuItem>Edit user</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
-              Delete user
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/users/${user.id}`}>Edit user</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
