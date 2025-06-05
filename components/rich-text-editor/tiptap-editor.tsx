@@ -1,369 +1,131 @@
-"use client";
-
-import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import TextAlign from "@tiptap/extension-text-align";
-import { useState } from "react";
-import {
-  Bold,
-  Italic,
-  Underline as UnderlineIcon,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  List,
-  ListOrdered,
-  Quote,
-  Heading1,
-  Heading2,
-  Heading3,
-  Redo,
-  Undo,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
+import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { extensions } from './extensions';
+import { EditorMenuBar } from './editor-menu-bar';
+import { Button } from '@/components/ui/button';
+import { Bold, Italic, Underline, Link as LinkIcon } from 'lucide-react';
+import { ImageUpload } from './image-upload';
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface TiptapEditorProps {
   content: string;
   onChange: (content: string) => void;
+  onImageUpload?: (file: File) => Promise<string>;
 }
 
-export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
-  const [link, setLink] = useState("");
+export function TiptapEditor({ content, onChange, onImageUpload }: TiptapEditorProps) {
+  const [showImageUpload, setShowImageUpload] = useState(false);
 
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      Link.configure({
-        openOnClick: false,
-      }),
-      Image,
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
-    ],
+    extensions,
     content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
   });
 
+  const handleImageUpload = async (file: File) => {
+    if (onImageUpload && editor) {
+      try {
+        const url = await onImageUpload(file);
+        editor.chain().focus().setImage({ src: url }).run();
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
+    }
+    setShowImageUpload(false);
+  };
+
   if (!editor) {
     return null;
   }
 
-  const addLink = () => {
-    const url = prompt("URL", "https://");
-    if (url) {
-      editor
-        .chain()
-        .focus()
-        .extendMarkRange("link")
-        .setLink({ href: url })
-        .run();
-    }
-  };
-
-  const addImage = () => {
-    const url = prompt("Image URL", "https://");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
-
   return (
     <div className="border rounded-md">
-      <div className="p-2 border-b flex flex-wrap gap-1 bg-muted/30">
-        <TooltipProvider>
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => editor.chain().focus().undo().run()}
-                  disabled={!editor.can().undo()}
-                >
-                  <Undo className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Undo</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => editor.chain().focus().redo().run()}
-                  disabled={!editor.can().redo()}
-                >
-                  <Redo className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Redo</TooltipContent>
-            </Tooltip>
-          </div>
+      <Tabs defaultValue="edit">
+        <div className="border-b">
+          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
+            <TabsTrigger
+              value="edit"
+              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary"
+            >
+              Edit
+            </TabsTrigger>
+            <TabsTrigger
+              value="preview"
+              className="rounded-none border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary"
+            >
+              Preview
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
+        <TabsContent value="edit" className="p-0">
+          <EditorMenuBar editor={editor} />
+          
+          {showImageUpload && (
+            <div className="p-4 border-b">
+              <ImageUpload onImageUpload={handleImageUpload} />
+            </div>
+          )}
 
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive("heading", { level: 1 }) ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                >
-                  <Heading1 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Heading 1</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                >
-                  <Heading2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Heading 2</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive("heading", { level: 3 }) ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                >
-                  <Heading3 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Heading 3</TooltipContent>
-            </Tooltip>
-          </div>
+          <EditorContent
+            editor={editor}
+            className="min-h-[400px] p-4 prose dark:prose-invert max-w-none"
+          />
 
-          <Separator orientation="vertical" className="h-6 mx-1" />
-
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
+          {editor && (
+            <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+              <div className="flex items-center space-x-1 rounded-md border bg-background shadow-md p-1">
                 <Button
-                  variant={editor.isActive("bold") ? "secondary" : "ghost"}
+                  variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
                   size="icon"
+                  className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleBold().run()}
                 >
                   <Bold className="h-4 w-4" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Bold</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
                 <Button
-                  variant={editor.isActive("italic") ? "secondary" : "ghost"}
+                  variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
                   size="icon"
+                  className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleItalic().run()}
                 >
                   <Italic className="h-4 w-4" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Italic</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
                 <Button
-                  variant={editor.isActive("underline") ? "secondary" : "ghost"}
+                  variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
                   size="icon"
+                  className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleUnderline().run()}
                 >
-                  <UnderlineIcon className="h-4 w-4" />
+                  <Underline className="h-4 w-4" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Underline</TooltipContent>
-            </Tooltip>
-          </div>
-
-          <Separator orientation="vertical" className="h-6 mx-1" />
-
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
                 <Button
-                  variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
+                  variant={editor.isActive('link') ? 'secondary' : 'ghost'}
                   size="icon"
-                  onClick={() => editor.chain().focus().toggleBulletList().run()}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Bullet List</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                >
-                  <ListOrdered className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Ordered List</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive("blockquote") ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                >
-                  <Quote className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Blockquote</TooltipContent>
-            </Tooltip>
-          </div>
-
-          <Separator orientation="vertical" className="h-6 mx-1" />
-
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().setTextAlign("left").run()}
-                >
-                  <AlignLeft className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Align Left</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().setTextAlign("center").run()}
-                >
-                  <AlignCenter className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Align Center</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().setTextAlign("right").run()}
-                >
-                  <AlignRight className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Align Right</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive({ textAlign: "justify" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-                >
-                  <AlignJustify className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Justify</TooltipContent>
-            </Tooltip>
-          </div>
-
-          <Separator orientation="vertical" className="h-6 mx-1" />
-
-          <div className="flex items-center space-x-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={editor.isActive("link") ? "secondary" : "ghost"}
-                  size="icon"
-                  onClick={addLink}
+                  className="h-8 w-8"
+                  onClick={() => {
+                    const url = window.prompt('Enter URL');
+                    if (url) {
+                      editor.chain().focus().setLink({ href: url }).run();
+                    }
+                  }}
                 >
                   <LinkIcon className="h-4 w-4" />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add Link</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={addImage}
-                >
-                  <ImageIcon className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add Image</TooltipContent>
-            </Tooltip>
-          </div>
-        </TooltipProvider>
-      </div>
+              </div>
+            </BubbleMenu>
+          )}
+        </TabsContent>
 
-      {editor && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-          <div className="flex items-center space-x-1 rounded-md border bg-background shadow-md p-1">
-            <Button
-              variant={editor.isActive("bold") ? "secondary" : "ghost"}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={editor.isActive("italic") ? "secondary" : "ghost"}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={editor.isActive("underline") ? "secondary" : "ghost"}
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-            >
-              <UnderlineIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={editor.isActive("link") ? "secondary" : "ghost"}
-              size="icon"
-              className="h-8 w-8"
-              onClick={addLink}
-            >
-              <LinkIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </BubbleMenu>
-      )}
-
-      <EditorContent editor={editor} className="p-4 prose dark:prose-invert max-w-none" />
+        <TabsContent value="preview" className="p-4">
+          <div
+            className="prose dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: editor.getHTML() }}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
