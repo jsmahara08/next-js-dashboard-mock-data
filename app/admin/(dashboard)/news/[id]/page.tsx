@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { News } from "@/types";
 import { Loader2, Save, Eye, ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api";
 
 export default function EditNewsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -26,9 +27,7 @@ export default function EditNewsPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch(`/api/news/${params.id}`);
-        if (!response.ok) throw new Error("Failed to fetch news");
-        const data = await response.json();
+        const data = await apiClient.getNewsArticle(params.id);
         setNews(data);
         setTitle(data.title);
         setContent(data.content);
@@ -49,21 +48,13 @@ export default function EditNewsPage({ params }: { params: { id: string } }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/news/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          excerpt,
-          slug,
-          status: isPublished ? "published" : "draft",
-        }),
+      await apiClient.updateNews(params.id, {
+        title,
+        content,
+        excerpt,
+        slug,
+        status: isPublished ? "published" : "draft",
       });
-
-      if (!response.ok) throw new Error("Failed to update news");
 
       toast.success("News article updated successfully");
       router.push("/admin/news");
@@ -80,12 +71,7 @@ export default function EditNewsPage({ params }: { params: { id: string } }) {
     if (!confirm("Are you sure you want to delete this article?")) return;
 
     try {
-      const response = await fetch(`/api/news/${params.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete news");
-
+      await apiClient.deleteNews(params.id);
       toast.success("News article deleted successfully");
       router.push("/admin/news");
       router.refresh();

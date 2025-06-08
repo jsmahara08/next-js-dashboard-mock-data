@@ -1,28 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { mockSiteSettings } from "@/lib/mock-data";
 import { Loader2, Save, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api";
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState(mockSiteSettings);
+  const [settings, setSettings] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const data = await apiClient.getSiteSettings();
+      setSettings(data);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      toast.error('Failed to fetch settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleChange = (key: string, value: string) => {
-    setSettings((prev) => ({
+    setSettings((prev: any) => ({
       ...prev,
       [key]: value,
     }));
   };
 
   const handleSocialChange = (network: string, value: string) => {
-    setSettings((prev) => ({
+    setSettings((prev: any) => ({
       ...prev,
       socialLinks: {
         ...prev.socialLinks,
@@ -33,13 +50,28 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast.success("Settings saved successfully");
-    setIsSaving(false);
+    try {
+      await apiClient.updateSiteSettings(settings);
+      toast.success("Settings saved successfully");
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error("Failed to save settings");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[calc(100vh-200px)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return <div>Settings not found</div>;
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -100,9 +132,9 @@ export default function SettingsPage() {
                 <Label htmlFor="copyright">Copyright Text</Label>
                 <Input
                   id="copyright"
-                  value={settings.footer.copyright}
+                  value={settings.footer?.copyright || ''}
                   onChange={(e) => 
-                    setSettings((prev) => ({
+                    setSettings((prev: any) => ({
                       ...prev,
                       footer: {
                         ...prev.footer,
@@ -210,7 +242,7 @@ export default function SettingsPage() {
                 <Label htmlFor="facebook">Facebook</Label>
                 <Input
                   id="facebook"
-                  value={settings.socialLinks.facebook || ""}
+                  value={settings.socialLinks?.facebook || ""}
                   onChange={(e) => handleSocialChange("facebook", e.target.value)}
                   placeholder="https://facebook.com/yourpage"
                 />
@@ -220,7 +252,7 @@ export default function SettingsPage() {
                 <Label htmlFor="twitter">Twitter</Label>
                 <Input
                   id="twitter"
-                  value={settings.socialLinks.twitter || ""}
+                  value={settings.socialLinks?.twitter || ""}
                   onChange={(e) => handleSocialChange("twitter", e.target.value)}
                   placeholder="https://twitter.com/yourhandle"
                 />
@@ -230,7 +262,7 @@ export default function SettingsPage() {
                 <Label htmlFor="instagram">Instagram</Label>
                 <Input
                   id="instagram"
-                  value={settings.socialLinks.instagram || ""}
+                  value={settings.socialLinks?.instagram || ""}
                   onChange={(e) => handleSocialChange("instagram", e.target.value)}
                   placeholder="https://instagram.com/youraccount"
                 />
@@ -240,7 +272,7 @@ export default function SettingsPage() {
                 <Label htmlFor="linkedin">LinkedIn</Label>
                 <Input
                   id="linkedin"
-                  value={settings.socialLinks.linkedin || ""}
+                  value={settings.socialLinks?.linkedin || ""}
                   onChange={(e) => handleSocialChange("linkedin", e.target.value)}
                   placeholder="https://linkedin.com/company/yourcompany"
                 />

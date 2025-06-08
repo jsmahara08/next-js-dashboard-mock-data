@@ -10,6 +10,7 @@ import { TiptapEditor } from "@/components/rich-text-editor/tiptap-editor";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api";
 
 export default function AddNewsPage() {
   const router = useRouter();
@@ -23,23 +24,15 @@ export default function AddNewsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch("/api/news", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          excerpt,
-          slug,
-          status: isPublished ? "published" : "draft",
-          author: "1", // In a real app, this would be the current user's ID
-          tags: [],
-        }),
+      await apiClient.createNews({
+        title,
+        content,
+        excerpt,
+        slug,
+        status: isPublished ? "published" : "draft",
+        author: "1", // In a real app, this would be the current user's ID
+        tags: [],
       });
-
-      if (!response.ok) throw new Error("Failed to create news");
 
       toast.success("News article created successfully");
       router.push("/admin/news");
