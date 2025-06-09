@@ -32,10 +32,13 @@ const mcqSchema = new mongoose.Schema({
     enum: ['easy', 'medium', 'hard'],
     default: 'medium'
   },
-  category: {
-    type: String,
-    required: true,
-    trim: true
+  categoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
+  },
+  subcategoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
   },
   tags: [{
     type: String,

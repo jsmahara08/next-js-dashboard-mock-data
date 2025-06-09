@@ -1,3 +1,5 @@
+import { useAuth } from './auth';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 class ApiClient {
@@ -7,12 +9,18 @@ class ApiClient {
     this.baseURL = baseURL;
   }
 
+  private getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
         ...options.headers,
       },
       ...options,
@@ -54,6 +62,27 @@ class ApiClient {
 
   async delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' });
+  }
+
+  // Categories
+  async getCategories() {
+    return this.get('/categories');
+  }
+
+  async getCategory(id: string) {
+    return this.get(`/categories/${id}`);
+  }
+
+  async createCategory(categoryData: any) {
+    return this.post('/categories', categoryData);
+  }
+
+  async updateCategory(id: string, categoryData: any) {
+    return this.put(`/categories/${id}`, categoryData);
+  }
+
+  async deleteCategory(id: string) {
+    return this.delete(`/categories/${id}`);
   }
 
   // Users
@@ -138,27 +167,6 @@ class ApiClient {
 
   async deleteMCQ(id: string) {
     return this.delete(`/mcqs/${id}`);
-  }
-
-  // Categories
-  async getCategories() {
-    return this.get('/categories');
-  }
-
-  async getCategory(id: string) {
-    return this.get(`/categories/${id}`);
-  }
-
-  async createCategory(categoryData: any) {
-    return this.post('/categories', categoryData);
-  }
-
-  async updateCategory(id: string, categoryData: any) {
-    return this.put(`/categories/${id}`, categoryData);
-  }
-
-  async deleteCategory(id: string) {
-    return this.delete(`/categories/${id}`);
   }
 
   // Courses

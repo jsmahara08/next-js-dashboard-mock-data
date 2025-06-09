@@ -15,6 +15,7 @@ const CMSPage = require('./models/CMSPage');
 const SiteSettings = require('./models/SiteSettings');
 
 // Import controllers
+const authController = require('./controllers/authController');
 const userController = require('./controllers/userController');
 const questionController = require('./controllers/questionController');
 const newsController = require('./controllers/newsController');
@@ -24,6 +25,9 @@ const courseController = require('./controllers/courseController');
 const quizController = require('./controllers/quizController');
 const cmsController = require('./controllers/cmsController');
 const settingsController = require('./controllers/settingsController');
+
+// Import middleware
+const { authenticateToken } = require('./middleware/auth');
 
 const PORT = process.env.PORT || 3001;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/admin_panel';
@@ -82,6 +86,30 @@ function handleCORS(req, res) {
   return false;
 }
 
+// Authentication middleware wrapper
+async function authenticateUser(req) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const user = await User.findById(decoded.userId);
+    
+    if (!user || user.status !== 'active') {
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    return null;
+  }
+}
+
 // Router function
 async function router(req, res) {
   if (handleCORS(req, res)) return;
@@ -92,39 +120,49 @@ async function router(req, res) {
   const query = parsedUrl.query;
 
   try {
-    // Extract ID from path if present
+    // Extract parts from path
     const pathParts = path.split('/').filter(part => part);
     const resource = pathParts[1]; // api/users -> users
     const id = pathParts[2]; // api/users/123 -> 123
 
+    // Get authenticated user for protected routes
+    let user = null;
+    if (['POST', 'PUT', 'DELETE'].includes(method) || resource === 'auth') {
+      user = await authenticateUser(req);
+    }
+
     // Route to appropriate controller
     switch (resource) {
+      case 'auth':
+        const authEndpoint = pathParts[2]; // api/auth/login -> login
+        await authController.handleRequest(req, res, method, authEndpoint, query);
+        break;
       case 'users':
-        await userController.handleRequest(req, res, method, id, query);
-        break;
-      case 'questions':
-        await questionController.handleRequest(req, res, method, id, query);
-        break;
-      case 'news':
-        await newsController.handleRequest(req, res, method, id, query);
-        break;
-      case 'mcqs':
-        await mcqController.handleRequest(req, res, method, id, query);
+        await userController.handleRequest(req, res, method, id, query, user);
         break;
       case 'categories':
-        await categoryController.handleRequest(req, res, method, id, query);
+        await categoryController.handleRequest(req, res, method, id, query, user);
+        break;
+      case 'questions':
+        await questionController.handleRequest(req, res, method, id, query, user);
+        break;
+      case 'news':
+        await newsController.handleRequest(req, res, method, id, query, user);
+        break;
+      case 'mcqs':
+        await mcqController.handleRequest(req, res, method, id, query, user);
         break;
       case 'courses':
-        await courseController.handleRequest(req, res, method, id, query);
+        await courseController.handleRequest(req, res, method, id, query, user);
         break;
       case 'quizzes':
-        await quizController.handleRequest(req, res, method, id, query);
+        await quizController.handleRequest(req, res, method, id, query, user);
         break;
       case 'cms':
-        await cmsController.handleRequest(req, res, method, id, query);
+        await cmsController.handleRequest(req, res, method, id, query, user);
         break;
       case 'settings':
-        await settingsController.handleRequest(req, res, method, id, query);
+        await settingsController.handleRequest(req, res, method, id, query, user);
         break;
       default:
         sendResponse(res, 404, { error: 'Route not found' });
@@ -157,6 +195,35 @@ async function seedInitialData() {
         avatar: 'https://ui-avatars.com/api/?name=Admin+User'
       });
       console.log('Admin user created');
+    }
+
+    // Create default categories
+    const categoriesExist = await Category.findOne();
+    if (!categoriesExist) {
+      const webDev = await Category.create({
+        name: 'Web Development',
+        slug: 'web-development',
+        description: 'Web development technologies and frameworks',
+        status: 'active'
+      });
+
+      await Category.create({
+        name: 'Frontend',
+        slug: 'frontend',
+        description: 'Frontend development technologies',
+        parentId: webDev._id,
+        status: 'active'
+      });
+
+      await Category.create({
+        name: 'Backend',
+        slug: 'backend',
+        description: 'Backend development technologies',
+        parentId: webDev._id,
+        status: 'active'
+      });
+
+      console.log('Default categories created');
     }
 
     // Check if site settings exist

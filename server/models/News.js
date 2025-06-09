@@ -39,6 +39,14 @@ const newsSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  categoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
+  },
+  subcategoryId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
+  },
   tags: [{
     type: String,
     trim: true

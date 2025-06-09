@@ -28,13 +28,16 @@ function parseBody(req) {
   });
 }
 
-async function handleRequest(req, res, method, id, query) {
+async function handleRequest(req, res, method, id, query, user) {
   try {
     switch (method) {
       case 'GET':
         if (id) {
           // Get single news article
-          const news = await News.findById(id).populate('author', 'name email');
+          const news = await News.findById(id)
+            .populate('author', 'name email')
+            .populate('categoryId', 'name slug')
+            .populate('subcategoryId', 'name slug');
           if (!news) {
             return sendResponse(res, 404, { error: 'News article not found' });
           }
@@ -43,44 +46,103 @@ async function handleRequest(req, res, method, id, query) {
           // Get all news articles
           const news = await News.find()
             .populate('author', 'name email')
+            .populate('categoryId', 'name slug')
+            .populate('subcategoryId', 'name slug')
             .sort({ createdAt: -1 });
           sendResponse(res, 200, news);
         }
         break;
 
       case 'POST':
-        // Create new news article
+        // Check authentication for write operations
+        if (!user || !['admin', 'editor'].includes(user.role)) {
+          return sendResponse(res, 403, { error: 'Admin or editor access required' });
+        }
+        
         const newsData = await parseBody(req);
+        
+        // Validate required fields
+        if (!newsData.title || !newsData.content || !newsData.excerpt) {
+          return sendResponse(res, 400, { error: 'Title, content, and excerpt are required' });
+        }
+        
+        // Generate slug if not provided
+        if (!newsData.slug) {
+          newsData.slug = newsData.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+        }
+        
+        // Check if slug already exists
+        const existingNews = await News.findOne({ slug: newsData.slug });
+        if (existingNews) {
+          return sendResponse(res, 400, { error: 'News slug already exists' });
+        }
+        
+        // Set author to current user
+        newsData.author = user._id;
+        
         const newNews = new News(newsData);
         await newNews.save();
         await newNews.populate('author', 'name email');
+        await newNews.populate('categoryId', 'name slug');
+        await newNews.populate('subcategoryId', 'name slug');
+        
         sendResponse(res, 201, newNews);
         break;
 
       case 'PUT':
+        if (!user || !['admin', 'editor'].includes(user.role)) {
+          return sendResponse(res, 403, { error: 'Admin or editor access required' });
+        }
+        
         if (!id) {
           return sendResponse(res, 400, { error: 'News ID required' });
         }
-        // Update news article
+        
         const updateData = await parseBody(req);
-        const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true })
-          .populate('author', 'name email');
-        if (!updatedNews) {
+        
+        // Check if news exists
+        const existingNews = await News.findById(id);
+        if (!existingNews) {
           return sendResponse(res, 404, { error: 'News article not found' });
         }
+        
+        // If slug is being updated, check for conflicts
+        if (updateData.slug && updateData.slug !== existingNews.slug) {
+          const slugConflict = await News.findOne({ 
+            slug: updateData.slug, 
+            _id: { $ne: id } 
+          });
+          if (slugConflict) {
+            return sendResponse(res, 400, { error: 'News slug already exists' });
+          }
+        }
+        
+        const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true })
+          .populate('author', 'name email')
+          .populate('categoryId', 'name slug')
+          .populate('subcategoryId', 'name slug');
+        
         sendResponse(res, 200, updatedNews);
         break;
 
       case 'DELETE':
+        if (!user || user.role !== 'admin') {
+          return sendResponse(res, 403, { error: 'Admin access required' });
+        }
+        
         if (!id) {
           return sendResponse(res, 400, { error: 'News ID required' });
         }
-        // Delete news article
+        
         const deletedNews = await News.findByIdAndDelete(id);
         if (!deletedNews) {
           return sendResponse(res, 404, { error: 'News article not found' });
         }
-        sendResponse(res, 200, { success: true });
+        
+        sendResponse(res, 200, { success: true, message: 'News article deleted successfully' });
         break;
 
       default:
