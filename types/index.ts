@@ -10,12 +10,40 @@ export interface User {
   lastLogin?: string;
 }
 
-// Content types
+// Category and Subcategory types
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  parentId?: string;
+  status: 'active' | 'inactive';
+  subcategories?: Category[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Subcategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  parentId: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Content types with enhanced categorization
 export interface Question {
   id: string;
   question: string;
   answer: string;
-  category: string;
+  categoryId?: string;
+  subcategoryId?: string;
+  category?: Category;
+  subcategory?: Subcategory;
+  tags: string[];
   status: 'published' | 'draft';
   createdAt: string;
   updatedAt: string;
@@ -31,34 +59,36 @@ export interface News {
   featuredImage?: string;
   status: 'published' | 'draft';
   publishDate: string;
+  categoryId?: string;
+  subcategoryId?: string;
+  category?: Category;
+  subcategory?: Subcategory;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
   author: string;
-  tags: string[];
+}
+
+export interface MCQOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
 }
 
 export interface MCQ {
   id: string;
   question: string;
-  options: {
-    id: string;
-    text: string;
-    isCorrect: boolean;
-  }[];
+  options: MCQOption[];
   explanation?: string;
   difficulty: 'easy' | 'medium' | 'hard';
-  category: string;
+  categoryId?: string;
+  subcategoryId?: string;
+  category?: Category;
+  subcategory?: Subcategory;
   tags: string[];
   status: 'active' | 'inactive';
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  parentId?: string;
-  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Course {
@@ -71,9 +101,12 @@ export interface Course {
   status: 'published' | 'draft';
   categoryId: string;
   subcategoryId?: string;
+  category?: Category;
+  subcategory?: Subcategory;
   instructor: string;
   duration: number;
   level: 'beginner' | 'intermediate' | 'advanced';
+  tags: string[];
   createdAt: string;
   updatedAt: string;
   lessons: Lesson[];
@@ -88,6 +121,7 @@ export interface Lesson {
   courseId: string;
 }
 
+// Updated Quiz interface with proper MCQ references
 export interface Quiz {
   id: string;
   title: string;
@@ -95,7 +129,13 @@ export interface Quiz {
   timeLimit?: number;
   passingScore: number;
   status: 'active' | 'inactive';
-  questions: MCQ[];
+  categoryId?: string;
+  subcategoryId?: string;
+  category?: Category;
+  subcategory?: Subcategory;
+  tags: string[];
+  questions: string[]; // Array of MCQ IDs
+  questionsData?: MCQ[]; // Populated MCQ data
   createdAt: string;
   updatedAt: string;
 }
@@ -133,6 +173,39 @@ export interface SiteSettings {
   };
 }
 
+// Form types
+export interface QuestionFormData {
+  question: string;
+  answer: string;
+  categoryId: string;
+  subcategoryId: string;
+  tags: string[];
+  status: 'published' | 'draft';
+}
+
+export interface MCQFormData {
+  question: string;
+  options: MCQOption[];
+  explanation: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  categoryId: string;
+  subcategoryId: string;
+  tags: string[];
+  status: 'active' | 'inactive';
+}
+
+export interface QuizFormData {
+  title: string;
+  description: string;
+  timeLimit?: number;
+  passingScore: number;
+  status: 'active' | 'inactive';
+  categoryId: string;
+  subcategoryId: string;
+  tags: string[];
+  questions: string[];
+}
+
 // Table types for UI
 export interface PaginationState {
   pageIndex: number;
@@ -147,4 +220,13 @@ export interface SortingState {
 export interface FilterState {
   id: string;
   value: string;
+}
+
+// Filter options
+export interface FilterOptions {
+  categories: Category[];
+  subcategories: Subcategory[];
+  tags: string[];
+  difficulties?: string[];
+  statuses?: string[];
 }

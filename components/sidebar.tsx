@@ -21,6 +21,8 @@ import {
   Menu,
   FileEdit,
   LogOut,
+  HelpCircle,
+  List,
 } from 'lucide-react';
 
 interface NavItem {
@@ -51,19 +53,29 @@ export function Sidebar() {
       icon: <Users className="h-5 w-5" />,
     },
     {
-      title: 'Q&A',
-      href: '/admin/questions',
-      icon: <FileQuestion className="h-5 w-5" />,
+      title: 'Categories',
+      href: '/admin/categories',
+      icon: <List className="h-5 w-5" />,
     },
     {
-      title: 'News',
-      href: '/admin/news',
-      icon: <Newspaper className="h-5 w-5" />,
+      title: 'Q&A',
+      href: '/admin/questions',
+      icon: <HelpCircle className="h-5 w-5" />,
     },
     {
       title: 'MCQs',
       href: '/admin/mcqs',
       icon: <FileQuestion className="h-5 w-5" />,
+    },
+    {
+      title: 'Quizzes',
+      href: '/admin/quizzes',
+      icon: <GraduationCap className="h-5 w-5" />,
+    },
+    {
+      title: 'News',
+      href: '/admin/news',
+      icon: <Newspaper className="h-5 w-5" />,
     },
     {
       title: 'Courses',
@@ -73,11 +85,6 @@ export function Sidebar() {
         { title: 'All Courses', href: '/admin/courses' },
         { title: 'Categories', href: '/admin/courses/categories' },
       ],
-    },
-    {
-      title: 'Quizzes',
-      href: '/admin/quizzes',
-      icon: <GraduationCap className="h-5 w-5" />,
     },
     {
       title: 'CMS Pages',
@@ -109,7 +116,7 @@ export function Sidebar() {
     <div className={cn("flex h-screen flex-col border-r bg-card", collapsed ? "items-center" : "")}>
       <div className={cn("flex h-14 items-center border-b px-4", collapsed ? "justify-center" : "justify-between")}>
         {!collapsed && (
-          <Link href="/admin/dashboard\" className="flex items-center gap-2">
+          <Link href="/admin/dashboard" className="flex items-center gap-2">
             <span className="font-semibold">Admin Panel</span>
           </Link>
         )}
