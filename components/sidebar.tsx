@@ -116,7 +116,7 @@ export function Sidebar() {
     <div className={cn("flex h-screen flex-col border-r bg-card", collapsed ? "items-center" : "")}>
       <div className={cn("flex h-14 items-center border-b px-4", collapsed ? "justify-center" : "justify-between")}>
         {!collapsed && (
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
+          <Link href="/admin/dashboard\" className="flex items-center gap-2">
             <span className="font-semibold">Admin Panel</span>
           </Link>
         )}
