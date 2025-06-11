@@ -211,6 +211,27 @@ class ApiClient {
     return this.delete(`/quizzes/${id}`);
   }
 
+  // Notices
+  async getNotices() {
+    return this.get('/notices');
+  }
+
+  async getNotice(id: string) {
+    return this.get(`/notices/${id}`);
+  }
+
+  async createNotice(noticeData: any) {
+    return this.post('/notices', noticeData);
+  }
+
+  async updateNotice(id: string, noticeData: any) {
+    return this.put(`/notices/${id}`, noticeData);
+  }
+
+  async deleteNotice(id: string) {
+    return this.delete(`/notices/${id}`);
+  }
+
   // CMS Pages
   async getCMSPages() {
     return this.get('/cms');

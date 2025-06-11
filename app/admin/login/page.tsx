@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/lib/auth';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -99,10 +100,21 @@ export default function LoginPage() {
           </form>
         </Form>
 
-        <div className="text-center text-sm text-muted-foreground mt-6">
-          <p>Demo Credentials:</p>
-          <p>Email: admin@example.com</p>
-          <p>Password: password</p>
+        <div className="text-center space-y-4">
+          <div className="text-sm text-muted-foreground">
+            <p>Demo Credentials:</p>
+            <p>Email: admin@example.com</p>
+            <p>Password: password</p>
+          </div>
+          
+          <div className="text-sm">
+            <p className="text-muted-foreground">
+              Don't have an account?{' '}
+              <Link href="/admin/auth/register" className="text-primary hover:underline">
+                Register here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

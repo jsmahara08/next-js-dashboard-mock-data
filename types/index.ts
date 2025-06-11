@@ -3,11 +3,12 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'editor' | 'viewer';
-  status: 'active' | 'inactive';
+  role: 'admin' | 'editor' | 'viewer' | 'user';
+  status: 'active' | 'inactive' | 'pending';
   avatar?: string;
   createdAt: string;
   lastLogin?: string;
+  emailVerified?: boolean;
 }
 
 // Category and Subcategory types
@@ -67,6 +68,25 @@ export interface News {
   createdAt: string;
   updatedAt: string;
   author: string;
+}
+
+export interface Notice {
+  id: string;
+  title: string;
+  content: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'published' | 'draft' | 'archived';
+  publishDate: string;
+  expiryDate?: string;
+  author: string;
+  categoryId?: string;
+  category?: Category;
+  tags: string[];
+  isSticky: boolean;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MCQOption {
@@ -129,8 +149,10 @@ export interface Quiz {
   timeLimit?: number;
   passingScore: number;
   status: 'active' | 'inactive';
+  courseId?: string;
   categoryId?: string;
   subcategoryId?: string;
+  course?: Course;
   category?: Category;
   subcategory?: Subcategory;
   tags: string[];
@@ -200,10 +222,24 @@ export interface QuizFormData {
   timeLimit?: number;
   passingScore: number;
   status: 'active' | 'inactive';
+  courseId: string;
   categoryId: string;
   subcategoryId: string;
   tags: string[];
   questions: string[];
+}
+
+export interface NoticeFormData {
+  title: string;
+  content: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'published' | 'draft' | 'archived';
+  publishDate: string;
+  expiryDate?: string;
+  categoryId?: string;
+  tags: string[];
+  isSticky: boolean;
 }
 
 // Table types for UI

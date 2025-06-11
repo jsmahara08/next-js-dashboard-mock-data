@@ -13,6 +13,7 @@ const Course = require('./models/Course');
 const Quiz = require('./models/Quiz');
 const CMSPage = require('./models/CMSPage');
 const SiteSettings = require('./models/SiteSettings');
+const Notice = require('./models/Notice');
 
 // Import controllers
 const authController = require('./controllers/authController');
@@ -25,6 +26,7 @@ const courseController = require('./controllers/courseController');
 const quizController = require('./controllers/quizController');
 const cmsController = require('./controllers/cmsController');
 const settingsController = require('./controllers/settingsController');
+const noticeController = require('./controllers/noticeController');
 
 // Import middleware
 const { authenticateToken } = require('./middleware/auth');
@@ -164,6 +166,9 @@ async function router(req, res) {
       case 'settings':
         await settingsController.handleRequest(req, res, method, id, query, user);
         break;
+      case 'notices':
+        await noticeController.handleRequest(req, res, method, id, query, user);
+        break;
       default:
         sendResponse(res, 404, { error: 'Route not found' });
     }
@@ -190,6 +195,7 @@ async function seedInitialData() {
       await User.create({
         name: 'Admin User',
         email: 'admin@example.com',
+        password: 'password',
         role: 'admin',
         status: 'active',
         avatar: 'https://ui-avatars.com/api/?name=Admin+User'

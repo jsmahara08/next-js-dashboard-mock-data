@@ -23,6 +23,7 @@ import {
   LogOut,
   HelpCircle,
   List,
+  Bell,
 } from 'lucide-react';
 
 interface NavItem {
@@ -78,6 +79,11 @@ export function Sidebar() {
       icon: <Newspaper className="h-5 w-5" />,
     },
     {
+      title: 'Notice Board',
+      href: '/admin/notices',
+      icon: <Bell className="h-5 w-5" />,
+    },
+    {
       title: 'Courses',
       href: '/admin/courses',
       icon: <BookOpen className="h-5 w-5" />,
@@ -116,7 +122,7 @@ export function Sidebar() {
     <div className={cn("flex h-screen flex-col border-r bg-card", collapsed ? "items-center" : "")}>
       <div className={cn("flex h-14 items-center border-b px-4", collapsed ? "justify-center" : "justify-between")}>
         {!collapsed && (
-          <Link href="/admin/dashboard\" className="flex items-center gap-2">
+          <Link href="/admin/dashboard" className="flex items-center gap-2">
             <span className="font-semibold">Admin Panel</span>
           </Link>
         )}
